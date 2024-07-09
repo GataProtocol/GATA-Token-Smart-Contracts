@@ -1,5 +1,5 @@
 // Add a beneficiary (only done once)
-vestingContract.addBeneficiary(beneficiaryAddress, 2000000000 * 10**18); // 2,000,000,000 GATA Tokens
+vestingContract.addBeneficiary(beneficiaryAddress, 2375000000 * 10**18); // 2,375,000,000 GATA Tokens
 
 // Release vested tokens (can be called periodically)
 vestingContract.release(beneficiaryAddress);
