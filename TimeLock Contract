@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract TimeLock is Ownable {
+    IERC20 public token;
+    uint256 public releaseTime;
+
+    event TokensReleased(uint256 amount);
+
+    constructor(IERC20 _token) {
+        token = _token;
+        releaseTime = block.timestamp + 10 * 365 days; // 10 years
+    }
+
+    function release() external onlyOwner {
+        require(block.timestamp >= releaseTime, "current time is before release time");
+
+        uint256 amount = token.balanceOf(address(this));
+        require(amount > 0, "no tokens to release");
+
+        token.transfer(owner(), amount);
+
+        emit TokensReleased(amount);
+    }
+}
