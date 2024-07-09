@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract Vesting is Ownable {
+    IERC20 public token;
+    uint256 public cliff;
+    uint256 public start;
+    uint256 public duration = 4 * 365 days; // 4 years after the cliff
+    uint256 public totalVestingAmount = 2375000000 * 10**18; // 2,375,000,000 GATA Tokens
+
+    mapping(address => uint256) public initialBalance;
+    mapping(address => uint256) public released;
+
+    event TokensReleased(address beneficiary, uint256 amount);
+
+    constructor(IERC20 _token) {
+        token = _token;
+        start = block.timestamp;
+        cliff = start + 365 days; // 1 year cliff
+    }
+
+    function addBeneficiary(address _beneficiary, uint256 _amount) external onlyOwner {
+        require(initialBalance[_beneficiary] == 0, "beneficiary already added");
+        require(_amount == totalVestingAmount, "incorrect amount for vesting");
+        initialBalance[_beneficiary] = _amount;
+    }
+
+    function release(address _beneficiary) public {
+        uint256 vestedAmount = vestedAmount(_beneficiary);
+        uint256 unreleased = vestedAmount - released[_beneficiary];
+
+        require(unreleased > 0, "no tokens are due");
+
+        released[_beneficiary] += unreleased;
+        token.transfer(_beneficiary, unreleased);
+
+        emit TokensReleased(_beneficiary, unreleased);
+    }
+
+    function vestedAmount(address _beneficiary) public view returns (uint256) {
+        uint256 totalBalance = initialBalance[_beneficiary];
+        if (block.timestamp < cliff) {
+            return 0; // Nothing is vested before the cliff period
+        } else if (block.timestamp >= cliff && block.timestamp < cliff + duration) {
+            uint256 timePassed = block.timestamp - cliff;
+            uint256 periodsPassed = timePassed / (180 days); // 6 months periods
+            return totalBalance * (20 + periodsPassed * 10) / 100; // 20% after cliff + 10% every 6 months
+        } else {
+            return totalBalance;
+        }
+    }
+}
