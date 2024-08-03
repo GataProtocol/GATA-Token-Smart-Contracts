@@ -1,13 +1,34 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract GATAToken is ERC20Burnable, Ownable {
-    uint256 private constant TOTAL_SUPPLY = 10000000000 * 10**18; // 10 billion GATA Tokens with 18 decimals
+contract GATAToken is ERC20, Ownable {
+    uint256 private constant MAX_SUPPLY = 10_000_000_000 * 10**18; // 10 billion GATA with 18 decimals
 
-    constructor() ERC20("GATA Token", "GATA") {
-        _mint(msg.sender, TOTAL_SUPPLY);
+    constructor() ERC20("GATA", "GATA") Ownable(msg.sender) {
+        _mint(msg.sender, MAX_SUPPLY);
+    }
+
+    // Burnable functionality
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
+    }
+
+    // Custom Token Name
+    string public customTokenName = "GATA";
+
+    // Token Details Document
+    string public constant tokenDetails = "GATA Token is the cryptocurrency of the GATA Protocol, a community owned and operated deCommerce and Logistics Ecosystem. To learn more about the ecosystem please check our webpage at gataprotocol.org";
+
+    // Denounce Ownership
+    function renounceOwnership() public override onlyOwner {
+        super.renounceOwnership();
+    }
+
+    // Change Owner
+    function transferOwnership(address newOwner) public override onlyOwner {
+        super.transferOwnership(newOwner);
     }
 }
