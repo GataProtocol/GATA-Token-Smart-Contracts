@@ -1,34 +1,55 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.27;
+
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract GATAToken is ERC20, Ownable {
-    uint256 private constant MAX_SUPPLY = 10_000_000_000 * 10**18; // 10 billion GATA with 18 decimals
 
-    constructor() ERC20("GATA", "GATA") Ownable(msg.sender) {
-        _mint(msg.sender, MAX_SUPPLY);
+contract GATAToken is ERC20("GATA Token", "GATA"), Ownable(msg.sender), Pausable {
+    uint256 private constant Initial_SUPPLY = 100_000_000 * 10**18; // 100 million GATA with 18 decimals
+
+
+    constructor() {
+        _mint(msg.sender, Initial_SUPPLY);  // Initial supply of 100 million GATA tokens
     }
 
+
+    // Mint function with no maximum supply
+    function mint(address to, uint256 amount) public onlyOwner whenNotPaused {
+        _mint(to, amount);  // Minting new tokens to the specified address
+    }
+
+
     // Burnable functionality
-    function burn(uint256 amount) external {
+    function burn(uint256 amount) external whenNotPaused {
         _burn(msg.sender, amount);
     }
 
-    // Custom Token Name
-    string public customTokenName = "GATA";
 
-    // Token Details Document
-    string public constant tokenDetails = "GATA Token is the cryptocurrency of the GATA Protocol, a community owned and operated deCommerce and Logistics Ecosystem. To learn more about the ecosystem please check our webpage at gataprotocol.org";
-
-    // Denounce Ownership
-    function renounceOwnership() public override onlyOwner {
-        super.renounceOwnership();
+    // Override _beforeTokenTransfer to check if the contract is paused
+    function _beforeTokenTransfer() view internal {
+    require(!paused(), "Token transfer when paused");
+    // Removed the call to super._beforeTokenTransfer
     }
 
-    // Change Owner
-    function transferOwnership(address newOwner) public override onlyOwner {
-        super.transferOwnership(newOwner);
+
+    // Token Details Document
+    string public constant tokenDetails = "GATA Token is the native utility cryptocurrency of the GATA Protocol, a community owned and operated decentralized eCommerce and logistics ecosystem. To learn more about our ecosystem please check our webpage at gataprotocol.org";
+   
+    // Token image IPFS link
+    string public constant _imageIPFSHash = "https://ipfs.io/ipfs/QmPpHdbxY459nnr6tgTDWdn7GAZTejFKBSmrQyinWvZ7z5";
+
+
+    // Pausing the contract
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+
+    // Unpausing the contract
+    function unpause() public onlyOwner {
+        _unpause();
     }
 }
